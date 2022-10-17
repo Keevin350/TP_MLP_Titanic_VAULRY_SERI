@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[78]:
+# In[1]:
 
 
 import warnings
@@ -16,19 +16,19 @@ from sklearn.preprocessing import StandardScaler
 warnings.simplefilter("ignore")
 
 
-# In[79]:
+# In[2]:
 
 
 train = pd.read_csv("train.csv")
 
 
-# In[80]:
+# In[3]:
 
 
 train.info()
 
 
-# In[81]:
+# In[4]:
 
 
 #suppression des colonnes non utiles
@@ -37,7 +37,7 @@ train = train.drop(['Cabin'], axis=1)
 train = train.drop(['Ticket'], axis=1)
 
 
-# In[82]:
+# In[5]:
 
 
 #Remplacer les valeurs de la Q,S,C par 1, 2 et 3
@@ -66,7 +66,7 @@ train['Embarked'] = train['Embarked'].replace(['C'],'3')
 train['Embarked'] = train['Embarked'].fillna('2')
 
 
-# In[83]:
+# In[6]:
 
 
 #Remplcaer les données catégoriques "male et female" par 1 et 0
@@ -74,7 +74,7 @@ train['Sex'] = train['Sex'].replace(['male'],'1')
 train['Sex'] = train['Sex'].replace(['female'],'0')
 
 
-# In[84]:
+# In[7]:
 
 
 #conversion colonne Name
@@ -131,14 +131,14 @@ train['Name'] = newV
 print(liste)
 
 
-# In[85]:
+# In[8]:
 
 
 averageAge = round(train['Age'].sum()/len(train))
 train['Age'] = train['Age'].fillna(averageAge)
 
 
-# In[86]:
+# In[9]:
 
 
 train['Embarked'] = train['Embarked'].astype('int64')
@@ -146,7 +146,7 @@ train['Name'] = train['Name'].astype('int64')
 train['Sex'] = train['Sex'].astype('int64')
 
 
-# In[87]:
+# In[10]:
 
 
 AvecValeursManquantes = len(train)
@@ -160,7 +160,7 @@ train = train.drop(['Survived'], axis=1)
 print(y)
 
 
-# In[88]:
+# In[11]:
 
 
 import time
@@ -180,49 +180,104 @@ print(accuracy_score(y_test, prediction))
 print("--- %s seconds ---" % (time.time() - start_time))
 
 
-# In[170]:
+# In[12]:
 
 
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Sequential
+from tensorflow import keras
 
 
-# In[171]:
+# In[13]:
 
 
 train.shape
 
 
-# In[172]:
+# In[14]:
+
 
 
 #traduction de notre MLP avec le  scoore le plus haut sur KEras
 
 model = Sequential()
 model.add(Input(train.shape))
-model.add(Dense(units=70, activation="relu"))
+model.add(Dense(units=100, activation="relu"))
+model.add(Dense(units=100, activation="relu"))
+model.add(Dense(units=100, activation="relu"))
+model.add(Dense(units=100, activation="relu"))
 model.add(Dense(units=1, activation="sigmoid"))
-model.compile(loss="BinaryCrossentropy", optimizer="adam", metrics=["accuracy"])
+model.compile(loss="BinaryCrossentropy", optimizer= "adam", metrics=["accuracy"])
 
 
-# In[173]:
+# In[15]:
 
 
-model.fit(X_train, y_train, batch_size=400, epochs = 10, verbose =1)
+model.fit(X_train, y_train, batch_size=200, epochs = 10, verbose =1)
 score = model.evaluate(X_test, y_test)
 
 
-# In[174]:
+# In[16]:
 
 
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
 
-# In[121]:
+# In[24]:
 
 
-model.summary()
+epochs = [10,20,30,40,50,100,200]
+batch_size = [50,100,200,300,400,500,600]
+optimizer = ['SGD', 'RMSprop', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam']
+meilleurI = 0
+meilleurZ = 0
+meilleurJ = 0
+meilleurA = 0
+maximum = 0
+loss = 0 
+
+    
+for a in range(3):
+    X_train, X_test, y_train, y_test = train_test_split(train, y, test_size=0.2)
+    for i in range(len(optimizer)):
+
+        for j in range(len(batch_size)):
+
+            for z in range(len(epochs)):
+
+                model = Sequential()
+                model.add(Input(train.shape))
+
+                if a >= 0:
+                    model.add(Dense(units=100, activation="relu"))
+                if a >= 1:
+                    model.add(Dense(units=100, activation="relu"))
+                if a>= 2:
+                    model.add(Dense(units=100, activation="relu"))
+
+                model.add(Dense(units=1, activation="sigmoid"))
+                model.compile(loss="BinaryCrossentropy", optimizer= optimizer[i], metrics=["accuracy"])
+
+                model.fit(X_train, y_train, batch_size=batch_size[j], epochs = epochs[z], verbose =0)
+                score = model.evaluate(X_test, y_test)
+
+                if maximum < score[1]:
+                    maximum = score[1]
+                    meilleurI = i
+                    meilleurZ = z
+                    meilleurJ = j
+                    meilleurA = a
+                    loss = score[0]
+
+    print("tour a : ", a)
+
+
+# In[25]:
+
+
+print("Meilleur score : ", maximum, " avec optimizer, batch_size, epochs, a = ",optimizer[meilleurI],", ",batch_size[meilleurJ],", ",epochs[meilleurZ], ", ",meilleurA)
+print("Loss : ", loss)
 
 
 # In[ ]:
